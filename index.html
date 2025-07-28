@@ -1,10 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Memo and The Notebooks</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MEMO AND THE NOTEBOOKS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>hello there</h1>
-    <p>band site under construction</p>
+  <body class="bg-white text-black font-sans">
+    <!-- HEADER -->
+    <header class="flex items-center justify-between px-6 py-4 border-b">
+      <h1 class="text-xl font-semibold tracking-tight">MEMO AND THE NOTEBOOKS</h1>
+      <button id="menu-toggle" class="sm:hidden text-sm underline">Menu</button>
+      <nav id="menu" class="hidden sm:flex gap-6 text-sm">
+        <a href="#" class="hover:underline">Bio</a>
+        <a href="#" class="hover:underline">Media</a>
+        <a href="#" class="hover:underline">Press</a>
+        <a href="#" class="hover:underline">Contact</a>
+      </nav>
+    </header>
+
+    <!-- HERO IMAGE -->
+    <section class="w-full h-[60vh] bg-gray-200 flex items-center justify-center text-3xl font-bold">
+      [ Band Photo Placeholder ]
+    </section>
+
+    <!-- BIO -->
+    <section class="px-6 py-12 max-w-3xl mx-auto">
+      <h2 class="text-lg font-medium mb-4">Bio</h2>
+      <p class="text-sm leading-relaxed text-gray-700">
+        [ Placeholder bio text for MEMO AND THE NOTEBOOKS. Write something engaging and short. ]
+      </p>
+    </section>
+
+    <!-- MEDIA -->
+    <section class="bg-gray-50 px-6 py-12">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-lg font-medium mb-4">Photos & Video</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
+            [ Image 1 ]
+          </div>
+          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
+            [ Image 2 ]
+          </div>
+          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
+            [ Video Embed ]
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESS -->
+    <section class="px-6 py-12 max-w-3xl mx-auto">
+      <h2 class="text-lg font-medium mb-4">Press Quotes</h2>
+      <ul class="space-y-4 text-sm text-gray-700">
+        <li>“[ Placeholder quote 1 ]” — BlogName</li>
+        <li>“[ Placeholder quote 2 ]” — Local Zine</li>
+        <li>“[ Placeholder quote 3 ]” — Music Outlet</li>
+      </ul>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="bg-gray-50 px-6 py-12 max-w-3xl mx-auto">
+      <h2 class="text-lg font-medium mb-4">Contact</h2>
+      <p class="text-sm text-gray-700">
+        For booking, press, or general inquiries:  
+        <br />
+        <span class="font-mono">[ email@placeholder.com ]</span>
+      </p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-gray-500 py-6 border-t">
+      © 2025 MEMO AND THE NOTEBOOKS
+    </footer>
+
+    <!-- JS for menu toggle -->
+    <script>
+      document.getElementById("menu-toggle").addEventListener("click", () => {
+        const menu = document.getElementById("menu");
+        menu.classList.toggle("hidden");
+      });
+    </script>
   </body>
 </html>
