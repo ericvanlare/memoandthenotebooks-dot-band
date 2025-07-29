@@ -7,80 +7,64 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-white text-black font-sans">
-    <!-- HEADER -->
-    <header class="flex items-center justify-between px-6 py-4 border-b">
-      <h1 class="text-xl font-semibold tracking-tight">MEMO AND THE NOTEBOOKS</h1>
-      <button id="menu-toggle" class="sm:hidden text-sm underline">Menu</button>
-      <nav id="menu" class="hidden sm:flex gap-6 text-sm">
-        <a href="#" class="hover:underline">Bio</a>
-        <a href="#" class="hover:underline">Media</a>
-        <a href="#" class="hover:underline">Press</a>
-        <a href="#" class="hover:underline">Contact</a>
-      </nav>
-    </header>
-
-    <!-- HERO IMAGE -->
-    <section class="w-full h-[60vh] bg-gray-200 flex items-center justify-center text-3xl font-bold">
-      [ Band Photo Placeholder ]
+    <!-- Header Section -->
+    <section class="flex flex-col items-center py-8 px-4 text-center">
+      <div class="w-40 h-40 bg-gray-300 mb-4"></div>
+      <h1 class="text-2xl font-bold tracking-tight mb-2">MEMO AND THE NOTEBOOKS</h1>
+      <div class="flex gap-4 text-xl">
+        <a href="#" class="hover:text-gray-600" aria-label="Instagram">
+          📷
+        </a>
+        <a href="#" class="hover:text-gray-600" aria-label="YouTube">
+          🎥
+        </a>
+      </div>
     </section>
 
-    <!-- BIO -->
-    <section class="px-6 py-12 max-w-3xl mx-auto">
-      <h2 class="text-lg font-medium mb-4">Bio</h2>
-      <p class="text-sm leading-relaxed text-gray-700">
-        [ Placeholder bio text for MEMO AND THE NOTEBOOKS. Write something engaging and short. ]
-      </p>
+    <!-- Divider -->
+    <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+    <!-- Photos & Artwork -->
+    <section class="px-4 mb-12 text-center">
+      <h2 class="text-xl font-bold mb-6">PHOTOS &amp; ARTWORK</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <div class="aspect-square bg-gray-200"></div>
+        <div class="aspect-square bg-gray-200"></div>
+        <div class="aspect-square bg-gray-200"></div>
+        <div class="aspect-square bg-gray-200"></div>
+      </div>
     </section>
 
-    <!-- MEDIA -->
-    <section class="bg-gray-50 px-6 py-12">
-      <div class="max-w-5xl mx-auto">
-        <h2 class="text-lg font-medium mb-4">Photos & Video</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
-            [ Image 1 ]
-          </div>
-          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
-            [ Image 2 ]
-          </div>
-          <div class="aspect-video bg-gray-300 flex items-center justify-center text-sm">
-            [ Video Embed ]
-          </div>
+    <!-- Dual Divider for desktop, single for mobile -->
+    <div class="flex justify-center mb-12">
+      <hr class="border-t-2 border-black w-4/5 md:w-[45%] md:mr-4" />
+      <hr class="hidden md:block border-t-2 border-black w-[45%] ml-4" />
+    </div>
+
+    <!-- Press Releases & Videos -->
+    <section class="px-4 mb-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+      <!-- Press -->
+      <div>
+        <h2 class="text-xl font-bold mb-4">PRESS RELEASES</h2>
+        <ul class="text-sm text-blue-600 underline">
+          <li><a href="#">PressKit_MATN_2025.pdf</a></li>
+        </ul>
+      </div>
+
+      <!-- Videos -->
+      <div>
+        <h2 class="text-xl font-bold mb-4">VIDEOS</h2>
+        <div class="aspect-video bg-gray-300 flex items-center justify-center">
+          [ Placeholder for embed ]
         </div>
       </div>
     </section>
 
-    <!-- PRESS -->
-    <section class="px-6 py-12 max-w-3xl mx-auto">
-      <h2 class="text-lg font-medium mb-4">Press Quotes</h2>
-      <ul class="space-y-4 text-sm text-gray-700">
-        <li>“[ Placeholder quote 1 ]” — BlogName</li>
-        <li>“[ Placeholder quote 2 ]” — Local Zine</li>
-        <li>“[ Placeholder quote 3 ]” — Music Outlet</li>
-      </ul>
+    <!-- Contact -->
+    <section class="px-4 pb-12 text-center">
+      <h2 class="text-xl font-bold mb-2">CONTACT</h2>
+      <p class="text-sm text-gray-700">email@placeholder.com</p>
     </section>
-
-    <!-- CONTACT -->
-    <section class="bg-gray-50 px-6 py-12 max-w-3xl mx-auto">
-      <h2 class="text-lg font-medium mb-4">Contact</h2>
-      <p class="text-sm text-gray-700">
-        For booking, press, or general inquiries:  
-        <br />
-        <span class="font-mono">[ email@placeholder.com ]</span>
-      </p>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="text-center text-xs text-gray-500 py-6 border-t">
-      © 2025 MEMO AND THE NOTEBOOKS
-    </footer>
-
-    <!-- JS for menu toggle -->
-    <script>
-      document.getElementById("menu-toggle").addEventListener("click", () => {
-        const menu = document.getElementById("menu");
-        menu.classList.toggle("hidden");
-      });
-    </script>
   </body>
 </html>
+
