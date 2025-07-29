@@ -32,10 +32,10 @@
     <section class="px-4 mb-12 text-center">
       <h2 class="text-xl font-bold mb-6">PHOTOS &amp; ARTWORK</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-        <img src="assets/MATN_1.jpeg" alt="Band Photo 1" class="aspect-square object-cover" />
-        <img src="assets/MATN_2.jpeg" alt="Band Photo 2" class="aspect-square object-cover" />
-        <img src="assets/MATN_3.jpeg" alt="Band Photo 3" class="aspect-square object-cover" />
-        <img src="assets/MATN_4.jpeg" alt="Band Photo 4" class="aspect-square object-cover" />
+        <img src="assets/MATN_1.jpeg" alt="Band Photo 1" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openLightbox(0)" />
+        <img src="assets/MATN_2.jpeg" alt="Band Photo 2" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openLightbox(1)" />
+        <img src="assets/MATN_3.jpeg" alt="Band Photo 3" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openLightbox(2)" />
+        <img src="assets/MATN_4.jpeg" alt="Band Photo 4" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openLightbox(3)" />
       </div>
     </section>
 
@@ -69,6 +69,94 @@
       <h2 class="text-xl font-bold mb-2">CONTACT</h2>
       <p class="text-sm text-gray-700">email@placeholder.com</p>
     </section>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden items-center justify-center">
+      <div class="relative max-w-4xl max-h-screen p-4">
+        <!-- Close button -->
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-2 text-white transition-all duration-200 z-10">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        
+        <!-- Image -->
+        <img id="lightbox-image" src="" alt="" class="max-w-full max-h-screen object-contain" />
+        
+        <!-- Navigation arrows -->
+        <button onclick="previousImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 text-white transition-all duration-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button onclick="nextImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 text-white transition-all duration-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+        
+        <!-- Image counter -->
+        <div id="image-counter" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 rounded-full px-3 py-1 text-white text-sm"></div>
+      </div>
+    </div>
+
+    <script>
+      const images = [
+        { src: 'assets/MATN_1.jpeg', alt: 'Band Photo 1' },
+        { src: 'assets/MATN_2.jpeg', alt: 'Band Photo 2' },
+        { src: 'assets/MATN_3.jpeg', alt: 'Band Photo 3' },
+        { src: 'assets/MATN_4.jpeg', alt: 'Band Photo 4' }
+      ];
+      
+      let currentImageIndex = 0;
+      
+      function openLightbox(index) {
+        currentImageIndex = index;
+        updateLightboxImage();
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.getElementById('lightbox').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function closeLightbox() {
+        document.getElementById('lightbox').classList.add('hidden');
+        document.getElementById('lightbox').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+      }
+      
+      function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        updateLightboxImage();
+      }
+      
+      function previousImage() {
+        currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+        updateLightboxImage();
+      }
+      
+      function updateLightboxImage() {
+        const lightboxImage = document.getElementById('lightbox-image');
+        const counter = document.getElementById('image-counter');
+        
+        lightboxImage.src = images[currentImageIndex].src;
+        lightboxImage.alt = images[currentImageIndex].alt;
+        counter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+      }
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (!document.getElementById('lightbox').classList.contains('hidden')) {
+          if (e.key === 'Escape') closeLightbox();
+          if (e.key === 'ArrowLeft') previousImage();
+          if (e.key === 'ArrowRight') nextImage();
+        }
+      });
+      
+      // Close on background click
+      document.getElementById('lightbox').addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+      });
+    </script>
   </body>
 </html>
 
