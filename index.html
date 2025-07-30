@@ -51,13 +51,13 @@
     </section>
 
     <!-- Dual Divider for desktop, single for mobile -->
-    <div class="flex justify-center mb-12">
+    <div class="flex justify-center mb-8 md:mb-12">
       <hr class="border-t-2 border-black w-4/5 md:w-[45%] md:mr-4" />
       <hr class="hidden md:block border-t-2 border-black w-[45%] ml-4" />
     </div>
 
     <!-- Bio, Press Releases, Videos & Contact -->
-    <section class="px-4 mb-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+    <section class="px-4 mb-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
       <!-- Left Column -->
       <div>
         <!-- Bio -->
@@ -79,12 +79,22 @@
         </ul>
       </div>
 
+      <!-- Divider between columns (mobile only) -->
+      <hr class="border-t-2 border-black mb-4 md:hidden" />
+
       <!-- Right Column -->
       <div>
         <!-- Videos -->
         <h2 class="text-xl font-bold mb-4 text-center md:text-left">VIDEOS</h2>
-        <div class="aspect-video bg-gray-300 flex items-center justify-center mb-8">
-          [ Placeholder for embed ]
+        <div class="aspect-video mb-8">
+          <iframe 
+            class="w-full h-full" 
+            src="https://www.youtube.com/embed/0Th0SpgOiWs" 
+            title="YouTube video player" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowfullscreen>
+          </iframe>
         </div>
         
         <!-- Divider -->
