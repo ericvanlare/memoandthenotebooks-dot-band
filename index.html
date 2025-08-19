@@ -50,6 +50,20 @@
       </div>
     </section>
 
+    <!-- Divider -->
+    <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+    <!-- Upcoming & Recent Shows -->
+    <section class="px-4 mb-12 text-center">
+      <h2 class="text-xl font-bold mb-6">UPCOMING &amp; RECENT SHOWS</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <img src="assets/posters/poster-2025-08-28_web.jpg" alt="Show August 28, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(0)" />
+        <img src="assets/posters/poster-2025-07-19_web.jpg" alt="Show July 19, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(1)" />
+        <img src="assets/posters/poster-2025-07-11_web.jpg" alt="Show July 11, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(2)" />
+        <img src="assets/posters/poster-2025-05-23_web.jpg" alt="Show May 23, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(3)" />
+      </div>
+    </section>
+
     <!-- Dual Divider for desktop, single for mobile -->
     <div class="flex justify-center mb-8 md:mb-12">
       <hr class="border-t-2 border-black w-4/5 md:w-[45%] md:mr-4" />
@@ -173,10 +187,28 @@
         { src: 'assets/MATN_4.jpeg', alt: 'Band Photo 4' }
       ];
       
+      const posters = [
+        { src: 'assets/posters/poster-2025-08-28_web.jpg', alt: 'Show August 28, 2025' },
+        { src: 'assets/posters/poster-2025-07-19_web.jpg', alt: 'Show July 19, 2025' },
+        { src: 'assets/posters/poster-2025-07-11_web.jpg', alt: 'Show July 11, 2025' },
+        { src: 'assets/posters/poster-2025-05-23_web.jpg', alt: 'Show May 23, 2025' }
+      ];
+      
       let currentImageIndex = 0;
+      let currentLightboxType = 'images'; // 'images' or 'posters'
       
       function openLightbox(index) {
         currentImageIndex = index;
+        currentLightboxType = 'images';
+        updateLightboxImage();
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.getElementById('lightbox').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function openPosterLightbox(index) {
+        currentImageIndex = index;
+        currentLightboxType = 'posters';
         updateLightboxImage();
         document.getElementById('lightbox').classList.remove('hidden');
         document.getElementById('lightbox').classList.add('flex');
@@ -190,22 +222,25 @@
       }
       
       function nextImage() {
-        currentImageIndex = (currentImageIndex + 1) % images.length;
+        const currentArray = currentLightboxType === 'images' ? images : posters;
+        currentImageIndex = (currentImageIndex + 1) % currentArray.length;
         updateLightboxImage();
       }
       
       function previousImage() {
-        currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+        const currentArray = currentLightboxType === 'images' ? images : posters;
+        currentImageIndex = (currentImageIndex - 1 + currentArray.length) % currentArray.length;
         updateLightboxImage();
       }
       
       function updateLightboxImage() {
         const lightboxImage = document.getElementById('lightbox-image');
         const counter = document.getElementById('image-counter');
+        const currentArray = currentLightboxType === 'images' ? images : posters;
         
-        lightboxImage.src = images[currentImageIndex].src;
-        lightboxImage.alt = images[currentImageIndex].alt;
-        counter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+        lightboxImage.src = currentArray[currentImageIndex].src;
+        lightboxImage.alt = currentArray[currentImageIndex].alt;
+        counter.textContent = `${currentImageIndex + 1} / ${currentArray.length}`;
       }
       
       // Keyboard navigation
