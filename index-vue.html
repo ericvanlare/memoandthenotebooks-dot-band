@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MEMO AND THE NOTEBOOKS</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3.4.15/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4.2.5/dist/vue-router.global.js"></script>
+  </head>
+  <body class="bg-white text-black font-sans">
+    <div id="app">
+      <router-view></router-view>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden items-center justify-center">
+      <div class="relative max-w-4xl max-h-screen p-4">
+        <!-- Close button -->
+        <button @click="closeLightbox" class="absolute top-4 right-4 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-2 text-white transition-all duration-200 z-10">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        
+        <!-- Image -->
+        <img id="lightbox-image" src="" alt="" class="max-w-full max-h-screen object-contain" />
+        
+        <!-- Navigation arrows -->
+        <button @click="previousImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 text-white transition-all duration-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button @click="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-3 text-white transition-all duration-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+        
+        <!-- Image counter -->
+        <div id="image-counter" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 rounded-full px-3 py-1 text-white text-sm"></div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp, ref, onMounted } = Vue;
+      const { createRouter, createWebHistory, createWebHashHistory } = VueRouter;
+
+      // Shared Header Component
+      const Header = {
+        template: `
+          <section class="flex flex-col items-center py-8 px-4 text-center">
+            <router-link to="/" v-if="showLogo">
+              <img src="assets/MATN_LOGO_boxed.png" alt="MEMO AND THE NOTEBOOKS Logo" class="w-40 h-40 object-contain mb-4 hover:opacity-80 transition-opacity" />
+            </router-link>
+            <img v-else src="assets/MATN_LOGO_boxed.png" alt="MEMO AND THE NOTEBOOKS Logo" class="w-40 h-40 object-contain mb-4" />
+            
+            <h1 class="text-2xl font-bold tracking-tight mb-2">
+              <router-link to="/" v-if="showLogo" class="hover:text-gray-600">MEMO AND THE NOTEBOOKS</router-link>
+              <span v-else>MEMO AND THE NOTEBOOKS</span>
+            </h1>
+            <div class="flex gap-4 text-xl">
+              <a href="https://www.instagram.com/memoandthenotebooks" target="_blank" class="hover:text-gray-600" aria-label="Instagram">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.40s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </a>
+              <a href="https://www.youtube.com/channel/UCsygGLdVw0FK-pCMCe4X5PA" target="_blank" class="hover:text-gray-600" aria-label="YouTube">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </a>
+              <a href="https://www.tiktok.com/@memoandthenotebooks" target="_blank" class="hover:text-gray-600" aria-label="TikTok">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                </svg>
+              </a>
+              <a href="https://open.spotify.com/artist/65sTPZQAUCkKbLUJ2cywxy" target="_blank" class="hover:text-gray-600" aria-label="Spotify">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.84-.179-.959-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.361 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                </svg>
+              </a>
+            </div>
+          </section>
+        `,
+        props: ['showLogo']
+      };
+
+      // Home Component
+      const Home = {
+        template: `
+          <div>
+            <Header :show-logo="false" />
+
+            <!-- Divider -->
+            <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+            <!-- Photos & Artwork -->
+            <section class="px-4 mb-12 text-center">
+              <div class="flex items-center justify-center gap-4 mb-6">
+                <h2 class="text-xl font-bold">PHOTOS &amp; ARTWORK</h2>
+                <router-link to="/photos" class="text-sm text-blue-600 underline hover:text-blue-800">View All (5)</router-link>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                <img src="assets/MATN_5_web.jpg" alt="Band Photo 5" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" @click="openLightbox(4)" />
+                <img src="assets/MATN_4_web.jpg" alt="Band Photo 4" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" @click="openLightbox(3)" />
+                <img src="assets/MATN_3_web.jpg" alt="Band Photo 3" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" @click="openLightbox(2)" />
+                <img src="assets/MATN_2_web.jpg" alt="Band Photo 2" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity" @click="openLightbox(1)" />
+              </div>
+            </section>
+
+            <!-- Divider -->
+            <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+            <!-- Upcoming & Recent Shows -->
+            <section class="px-4 mb-12 text-center">
+              <div class="flex items-center justify-center gap-4 mb-6">
+                <h2 class="text-xl font-bold">UPCOMING &amp; RECENT SHOWS</h2>
+                <router-link to="/shows" class="text-sm text-blue-600 underline hover:text-blue-800">View All (7)</router-link>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                <img src="assets/posters/poster-2025-08-28_web.jpg" alt="Show August 28, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" @click="openPosterLightbox(0)" />
+                <img src="assets/posters/poster-2025-07-19_web.jpg" alt="Show July 19, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" @click="openPosterLightbox(1)" />
+                <img src="assets/posters/poster-2025-07-11_web.jpg" alt="Show July 11, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" @click="openPosterLightbox(2)" />
+                <img src="assets/posters/poster-2025-05-23_web.jpg" alt="Show May 23, 2025" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" @click="openPosterLightbox(3)" />
+              </div>
+            </section>
+
+            <!-- Dual Divider for desktop, single for mobile -->
+            <div class="flex justify-center mb-8 md:mb-12">
+              <hr class="border-t-2 border-black w-4/5 md:w-[45%] md:mr-4" />
+              <hr class="hidden md:block border-t-2 border-black w-[45%] ml-4" />
+            </div>
+
+            <!-- Bio, Press Releases, Videos & Contact -->
+            <section class="px-4 mb-12 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+              <!-- Left Column -->
+              <div>
+                <!-- Bio -->
+                <h2 class="text-xl font-bold mb-4 text-center md:text-left">BIO</h2>
+                <div class="text-sm text-gray-700 mb-8">
+                  <p class="mb-4">Memo and The Notebooks is a genre-mixing band with roots in both San Jose and Santa Cruz, CA. The group was started by Memo Renteria for his senior recital project at San José State University, but what began as a school assignment quickly grew into a fully formed band with its own sound and identity. Blending elements of hip-hop, indie, punk, and hardcore, Memo and The Notebooks doesn't aim to fit into any box… they're here to break out of it.</p>
+                  <p class="mb-4">The band consists of Memo Renteria on vocals and guitar, Chris Askins on guitar and keyboards, Eric Van Lare on bass, and Andy Bridger on drums. Originally a six-piece, they've tightened things up over time without losing the energy and unpredictability that made them stand out in the first place.</p>
+                  <p class="mb-4">Their live shows bring a strong sense of nostalgia and personality. It's not unusual to see a GameCube running Smash Bros. off to the side or spot the band wearing clothes that rep their favorite TV shows, movies, and music influences. Whether they're playing a punk venue or an all-ages space, Memo and The Notebooks shows always feel personal, loud, and full of life.</p>
+                  <p>This isn't a band trying to follow a trend. Memo and The Notebooks is here to build something real and different, and they're having fun doing it.</p>
+                </div>
+                
+                <!-- Divider and Press -->
+                <div>
+                  <hr class="border-t-2 border-black mb-8" />
+                  
+                  <h2 class="text-xl font-bold mb-4 text-center md:text-left">PRESS RELEASES</h2>
+                  <ul class="text-sm text-blue-600 underline">
+                    <li><a href="assets/press/Sleepwalk Single Press Release.pdf" target="_blank">Sleepwalk Single Press Release.pdf</a></li>
+                    <li><a href="assets/press/Tessora's press release.pdf" target="_blank">Tessora's press release.pdf</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Divider between columns (mobile only) -->
+              <hr class="border-t-2 border-black mb-4 md:hidden" />
+
+              <!-- Right Column -->
+              <div>
+                <!-- Videos -->
+                <h2 class="text-xl font-bold mb-4 text-center md:text-left">VIDEOS</h2>
+                <div class="aspect-video mb-8">
+                  <iframe 
+                    class="w-full h-full" 
+                    src="https://www.youtube.com/embed/0Th0SpgOiWs" 
+                    title="YouTube video player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                  </iframe>
+                </div>
+                
+                <!-- Divider -->
+                <hr class="border-t-2 border-black mb-8" />
+                
+                <!-- Contact -->
+                <h2 class="text-xl font-bold mb-2 text-center md:text-left">CONTACT</h2>
+                <p class="text-sm text-gray-700 text-center md:text-left">memomusicinfo@gmail.com</p>
+                
+                <!-- Divider -->
+                <hr class="border-t-2 border-black my-8" />
+                
+                <!-- Email Signup -->
+                <h2 class="text-xl font-bold mb-4 text-center md:text-left">STAY UPDATED</h2>
+                <p class="text-sm text-gray-700 mb-4 text-center md:text-left">Get notified about new releases and shows</p>
+                
+                <form id="email-signup-form" action="https://script.google.com/macros/s/AKfycbyvy9OFSjcanefKgGyhcTV3AwN_xeeEwDMksVBbWnce7vHldSifHr0xxaap5B6ePfj9/exec" method="POST" target="hidden-iframe" class="max-w-sm mx-auto md:mx-0" @submit="handleEmailSignup">
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <input 
+                      type="email" 
+                      name="email"
+                      id="email-input"
+                      placeholder="Enter your email" 
+                      required
+                      v-model="email"
+                      class="flex-1 px-3 py-2 border-2 border-black text-sm focus:outline-none focus:ring-0"
+                    />
+                    <button 
+                      type="submit"
+                      class="px-6 py-2 bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors duration-200"
+                      :disabled="isSubmitting"
+                    >
+                      {{ isSubmitting ? 'SUBMITTING...' : 'SUBSCRIBE' }}
+                    </button>
+                  </div>
+                  <div v-if="signupMessage" :class="signupMessageClass" class="mt-2 text-sm">{{ signupMessage }}</div>
+                </form>
+                <iframe name="hidden-iframe" style="display:none;"></iframe>
+              </div>
+            </section>
+          </div>
+        `,
+        components: { Header },
+        setup() {
+          const email = ref('');
+          const isSubmitting = ref(false);
+          const signupMessage = ref('');
+          const signupMessageClass = ref('');
+
+          const handleEmailSignup = (e) => {
+            if (!email.value.trim()) {
+              e.preventDefault();
+              showMessage('Please enter an email address', 'error');
+              return;
+            }
+            
+            isSubmitting.value = true;
+            
+            setTimeout(() => {
+              showMessage('Successfully subscribed!', 'success');
+              email.value = '';
+              isSubmitting.value = false;
+            }, 1000);
+          };
+
+          const showMessage = (message, type) => {
+            signupMessage.value = message;
+            signupMessageClass.value = type === 'success' ? 'text-green-600' : 'text-red-600';
+            
+            setTimeout(() => {
+              signupMessage.value = '';
+            }, 5000);
+          };
+
+          return {
+            email,
+            isSubmitting,
+            signupMessage,
+            signupMessageClass,
+            handleEmailSignup,
+            openLightbox: window.openLightbox,
+            openPosterLightbox: window.openPosterLightbox
+          };
+        }
+      };
+
+      // Photos Component  
+      const Photos = {
+        template: `
+          <div>
+            <Header :show-logo="true" />
+
+            <!-- Divider -->
+            <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+            <!-- Photos & Artwork Gallery -->
+            <section class="px-4 mb-12 text-center">
+              <div class="flex items-center justify-center gap-4 mb-6">
+                <router-link to="/" class="text-sm text-blue-600 underline hover:text-blue-800">← Back to Home</router-link>
+                <h2 class="text-xl font-bold">PHOTOS &amp; ARTWORK</h2>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <img src="assets/MATN_5_web.jpg" alt="Band Photo 5" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-lg" @click="openLightbox(4)" />
+                <img src="assets/MATN_4_web.jpg" alt="Band Photo 4" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-lg" @click="openLightbox(3)" />
+                <img src="assets/MATN_3_web.jpg" alt="Band Photo 3" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-lg" @click="openLightbox(2)" />
+                <img src="assets/MATN_2_web.jpg" alt="Band Photo 2" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-lg" @click="openLightbox(1)" />
+                <img src="assets/MATN_1_web.jpg" alt="Band Photo 1" class="aspect-square object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-lg" @click="openLightbox(0)" />
+              </div>
+            </section>
+          </div>
+        `,
+        components: { Header },
+        setup() {
+          return {
+            openLightbox: window.openLightbox
+          };
+        }
+      };
+
+      // Shows Component
+      const Shows = {
+        template: `
+          <div>
+            <Header :show-logo="true" />
+
+            <!-- Divider -->
+            <hr class="border-t-2 border-black mx-auto w-4/5 mb-8" />
+
+            <!-- Shows Gallery -->
+            <section class="px-4 mb-12 text-center">
+              <div class="flex items-center justify-center gap-4 mb-6">
+                <router-link to="/" class="text-sm text-blue-600 underline hover:text-blue-800">← Back to Home</router-link>
+                <h2 class="text-xl font-bold">UPCOMING &amp; RECENT SHOWS</h2>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-08-28_web.jpg" alt="Show August 28, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(0)" />
+                  <p class="text-sm font-semibold">August 28, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-07-19_web.jpg" alt="Show July 19, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(1)" />
+                  <p class="text-sm font-semibold">July 19, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-07-11_web.jpg" alt="Show July 11, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(2)" />
+                  <p class="text-sm font-semibold">July 11, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-05-23_web.jpg" alt="Show May 23, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(3)" />
+                  <p class="text-sm font-semibold">May 23, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-05-16_web.jpg" alt="Show May 16, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(4)" />
+                  <p class="text-sm font-semibold">May 16, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2025-04-10_web.jpg" alt="Show April 10, 2025" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(5)" />
+                  <p class="text-sm font-semibold">April 10, 2025</p>
+                </div>
+                <div class="flex flex-col">
+                  <img src="assets/posters/poster-2024-12-07_web.jpg" alt="Show December 7, 2024" class="cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" @click="openPosterLightbox(6)" />
+                  <p class="text-sm font-semibold">December 7, 2024</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        `,
+        components: { Header },
+        setup() {
+          return {
+            openPosterLightbox: window.openPosterLightbox
+          };
+        }
+      };
+
+      // Detect environment and choose routing strategy
+      const isLocal = window.location.protocol === 'file:';
+      
+      // Routes
+      const routes = [
+        { path: '/', component: Home },
+        { path: '/photos', component: Photos },
+        { path: '/shows', component: Shows }
+      ];
+
+      // Router with environment-smart history mode
+      const router = createRouter({
+        history: isLocal 
+          ? createWebHashHistory()    // Local: file:///path/index.html#/photos
+          : createWebHistory(),       // Prod: https://url.band/photos  
+        routes
+      });
+
+      // Vue App
+      const app = createApp({
+        components: { Header }
+      });
+
+      app.use(router);
+      app.mount('#app');
+
+      // Global lightbox functions (keep existing functionality)
+      const images = [
+        { src: 'assets/MATN_1.jpeg', alt: 'Band Photo 1' },
+        { src: 'assets/MATN_2.jpeg', alt: 'Band Photo 2' },
+        { src: 'assets/MATN_3.jpeg', alt: 'Band Photo 3' },
+        { src: 'assets/MATN_4.jpeg', alt: 'Band Photo 4' },
+        { src: 'assets/MATN_5.JPG', alt: 'Band Photo 5' }
+      ];
+      
+      const posters = [
+        { src: 'assets/posters/poster-2025-08-28_web.jpg', alt: 'Show August 28, 2025' },
+        { src: 'assets/posters/poster-2025-07-19_web.jpg', alt: 'Show July 19, 2025' },
+        { src: 'assets/posters/poster-2025-07-11_web.jpg', alt: 'Show July 11, 2025' },
+        { src: 'assets/posters/poster-2025-05-23_web.jpg', alt: 'Show May 23, 2025' },
+        { src: 'assets/posters/poster-2025-05-16_web.jpg', alt: 'Show May 16, 2025' },
+        { src: 'assets/posters/poster-2025-04-10_web.jpg', alt: 'Show April 10, 2025' },
+        { src: 'assets/posters/poster-2024-12-07_web.jpg', alt: 'Show December 7, 2024' }
+      ];
+      
+      let currentImageIndex = 0;
+      let currentLightboxType = 'images';
+      
+      window.openLightbox = function(index) {
+        currentImageIndex = index;
+        currentLightboxType = 'images';
+        updateLightboxImage();
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.getElementById('lightbox').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      };
+      
+      window.openPosterLightbox = function(index) {
+        currentImageIndex = index;
+        currentLightboxType = 'posters';
+        updateLightboxImage();
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.getElementById('lightbox').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      };
+      
+      window.closeLightbox = function() {
+        document.getElementById('lightbox').classList.add('hidden');
+        document.getElementById('lightbox').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+      };
+      
+      window.nextImage = function() {
+        const currentArray = currentLightboxType === 'images' ? images : posters;
+        currentImageIndex = (currentImageIndex + 1) % currentArray.length;
+        updateLightboxImage();
+      };
+      
+      window.previousImage = function() {
+        const currentArray = currentLightboxType === 'images' ? images : posters;
+        currentImageIndex = (currentImageIndex - 1 + currentArray.length) % currentArray.length;
+        updateLightboxImage();
+      };
+      
+      function updateLightboxImage() {
+        const lightboxImage = document.getElementById('lightbox-image');
+        const counter = document.getElementById('image-counter');
+        const currentArray = currentLightboxType === 'images' ? images : posters;
+        
+        lightboxImage.src = currentArray[currentImageIndex].src;
+        lightboxImage.alt = currentArray[currentImageIndex].alt;
+        counter.textContent = `${currentImageIndex + 1} / ${currentArray.length}`;
+      }
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (!document.getElementById('lightbox').classList.contains('hidden')) {
+          if (e.key === 'Escape') window.closeLightbox();
+          if (e.key === 'ArrowLeft') window.previousImage();
+          if (e.key === 'ArrowRight') window.nextImage();
+        }
+      });
+      
+      // Close on background click
+      document.getElementById('lightbox').addEventListener('click', function(e) {
+        if (e.target === this) window.closeLightbox();
+      });
+    </script>
+  </body>
+</html>
