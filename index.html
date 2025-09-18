@@ -37,11 +37,95 @@
     </section>
 
     <!-- Next Show Section -->
-    <section class="px-4 mb-12 bg-black text-white py-12">
-      <div class="max-w-4xl mx-auto text-center">
-        <div class="mb-4">
-          <span class="inline-block bg-white text-black px-3 py-1 text-xs font-bold tracking-wider">NEXT SHOW</span>
+    <section class="px-4 mb-12 bg-black text-white py-12 relative overflow-hidden">
+      <!-- Desktop: Same layout as mobile - poster clusters in corners -->
+      <div class="hidden md:block absolute inset-0 pointer-events-none">
+        <div class="absolute top-4 right-4 opacity-4 rotate-45">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover shadow-sm" />
         </div>
+        <div class="absolute bottom-4 left-4 opacity-3 -rotate-12">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover shadow-sm" />
+        </div>
+        <div class="absolute top-8 left-8 opacity-3 -rotate-6">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-8 right-8 opacity-4 rotate-12">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-1/4 right-6 opacity-3 rotate-30">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-16 left-6 opacity-4 -rotate-24">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <!-- Even more desktop posters! -->
+        <div class="absolute top-12 right-12 opacity-3 rotate-18">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-12 left-12 opacity-4 -rotate-15">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-16 left-4 opacity-3 rotate-36">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-16 right-4 opacity-4 -rotate-21">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-20 right-2 opacity-2 rotate-42">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+      </div>
+      
+      <!-- Mobile: Dense poster pattern background -->
+      <div class="md:hidden absolute inset-0 pointer-events-none">
+        <div class="absolute top-4 right-4 opacity-4 rotate-45">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover shadow-sm" />
+        </div>
+        <div class="absolute bottom-4 left-4 opacity-3 -rotate-12">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover shadow-sm" />
+        </div>
+        <div class="absolute top-8 left-8 opacity-3 -rotate-6">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-8 right-8 opacity-4 rotate-12">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-1/4 right-6 opacity-3 rotate-30">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-16 left-6 opacity-4 -rotate-24">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <!-- Even more mobile posters! -->
+        <div class="absolute top-12 right-12 opacity-3 rotate-18">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-12 left-12 opacity-4 -rotate-15">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-16 left-4 opacity-3 rotate-36">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute bottom-16 right-4 opacity-4 -rotate-21">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-12 aspect-[0.77] object-cover" />
+        </div>
+        <div class="absolute top-20 right-2 opacity-2 rotate-42">
+          <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-10 aspect-[0.77] object-cover" />
+        </div>
+      </div>
+      
+      <div class="max-w-4xl mx-auto text-center relative z-10">
+        <!-- NEXT SHOW badge with flanking posters for all sizes -->
+        <div class="mb-4 flex items-center justify-center gap-3 sm:gap-4">
+          <div class="transform -rotate-6 sm:-rotate-6">
+            <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-8 sm:h-12 aspect-[0.77] object-cover shadow-sm sm:shadow-md border sm:border-2 border-white" />
+          </div>
+          <span class="inline-block bg-white text-black px-3 py-1 sm:px-4 sm:py-2 text-xs font-bold tracking-wider shadow-lg">NEXT SHOW</span>
+          <div class="transform rotate-6 sm:rotate-6">
+            <img src="assets/posters/poster-2025-09-27_web.jpg" alt="Live at Music City - September 27, 2025" class="h-8 sm:h-12 aspect-[0.77] object-cover shadow-sm sm:shadow-md border sm:border-2 border-white" />
+          </div>
+        </div>
+        
         <h2 class="text-3xl md:text-4xl font-bold mb-4">LIVE AT MUSIC CITY</h2>
         <div class="text-xl md:text-2xl mb-2">
           <time datetime="2025-09-27">SATURDAY, SEPTEMBER 27</time>
