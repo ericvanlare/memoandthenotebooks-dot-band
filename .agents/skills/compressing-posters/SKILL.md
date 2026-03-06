@@ -12,9 +12,9 @@ Resizes poster images so the longest dimension is 1200px (maintaining aspect rat
 1. Identify the uncompressed poster file in `assets/posters/` (typically a `.JPEG` or `.png` without `_web` in the name).
 2. Check its dimensions with `sips -g pixelWidth -g pixelHeight <file>`.
 3. Determine the longest dimension (width or height).
-4. Resize using `sips`:
-   - If height is the longest: `sips --resampleHeight 1200 "<input>" --out "<output>_web.jpg"`
-   - If width is the longest: `sips --resampleWidth 1200 "<input>" --out "<output>_web.jpg"`
+4. Resize and compress using ImageMagick (`magick`):
+   - If height is the longest: `magick "<input>" -resize x1200 -quality 75 "<output>_web.jpg"`
+   - If width is the longest: `magick "<input>" -resize 1200x -quality 75 "<output>_web.jpg"`
 5. Verify the output dimensions and file size with `sips` and `ls -lh`.
 
 ## Output naming convention
@@ -24,10 +24,10 @@ Resizes poster images so the longest dimension is 1200px (maintaining aspect rat
 
 ## Exception
 
-If the poster is square (or nearly square, e.g. 1080×1079), do NOT stretch it to 1200px. Keep original dimensions and just save as `_web.jpg`. Square posters look bad when stretched.
+If the poster is square (or nearly square, e.g. 1080×1079), do NOT stretch it to 1200px. Keep original dimensions and just convert with: `magick "<input>" -quality 75 "<output>_web.jpg"`. Square posters look bad when stretched.
 
 ## Expected results
 
 - Longest dimension: 1200px
-- File size: typically 250–560KB
+- File size: typically 100–300KB
 - Format: JPEG
