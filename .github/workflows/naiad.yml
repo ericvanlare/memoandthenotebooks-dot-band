@@ -33,6 +33,22 @@ on:
         description: "Model ID to use (set by platform)"
         required: false
         type: string
+      head_sha:
+        description: "PR head SHA for exact checkout (set by platform)"
+        required: false
+        type: string
+      head_ref:
+        description: "PR head branch name for local branch creation (set by platform)"
+        required: false
+        type: string
+      head_repo:
+        description: "Fork repo full name for fork PR checkout (set by platform)"
+        required: false
+        type: string
+      pr_number:
+        description: "PR number for concurrency (set by platform)"
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -44,7 +60,7 @@ permissions:
 # which would leave threads stuck in RUNNING with no reconciliation worker to fix them.
 # Instead, queue new runs behind the current one.
 concurrency:
-  group: naiad-${{ github.repository }}-${{ inputs.thread_id || github.ref }}
+  group: naiad-${{ github.repository }}-${{ inputs.pr_number && format('pr-{0}', inputs.pr_number) || inputs.thread_id || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -57,7 +73,57 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.ref }}
+          persist-credentials: false
+          ref: ${{ (inputs.head_sha != '' && (inputs.head_repo == '' || inputs.head_repo == github.repository)) && inputs.head_sha || github.ref }}
+
+      - name: Fetch fork HEAD (public fork PRs only)
+        if: inputs.head_repo != '' && inputs.head_repo != github.repository
+        run: |
+          git fetch https://github.com/${{ inputs.head_repo }}.git ${{ inputs.head_sha }} || {
+            echo "::error::Failed to fetch exact SHA ${{ inputs.head_sha }} from fork ${{ inputs.head_repo }}. Failing job — no mutable ref fallback."
+            exit 1
+          }
+          git checkout ${{ inputs.head_sha }}
+
+      - name: Create local branch at SHA (avoid detached HEAD)
+        if: inputs.head_sha != ''
+        run: |
+          HEAD_REF="${{ inputs.head_ref }}"
+          if [ -z "$HEAD_REF" ]; then
+            echo "::error::head_ref input is required when head_sha is set."
+            exit 1
+          fi
+          git checkout -B "$HEAD_REF" HEAD
+
+      - name: Verify head SHA is still current (PR runs only)
+        if: inputs.head_sha != '' && inputs.head_ref != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repoFull = '${{ inputs.head_repo }}' || '${{ github.repository }}';
+            const [owner, repo] = repoFull.split('/');
+            const ref = 'heads/${{ inputs.head_ref }}';
+            try {
+              const { data } = await github.rest.git.getRef({ owner, repo, ref });
+              const currentSha = data.object?.sha;
+              if (!currentSha) {
+                core.setFailed('Branch ${{ inputs.head_ref }} no longer exists.');
+                return;
+              }
+              if (currentSha !== '${{ inputs.head_sha }}') {
+                core.setFailed(
+                  'PR head SHA has changed since this run was queued ' +
+                  '(expected ${{ inputs.head_sha }}, got ' + currentSha + '). ' +
+                  'Failing — mention me again to retry with current code.'
+                );
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                core.setFailed('Branch ${{ inputs.head_ref }} no longer exists. The PR branch may have been deleted.');
+              } else {
+                core.setFailed('Failed to verify remote head SHA: ' + error.message);
+              }
+            }
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -103,10 +169,16 @@ jobs:
           echo "$ACTIONS_ID_TOKEN_REQUEST_URL" > "$CRED_DIR/oidc-url"
           echo "CRED_DIR=$CRED_DIR" >> "$GITHUB_OUTPUT"
 
-          # Strip secrets from the environment the agent will inherit
+          # Strip git credentials from the environment the agent will inherit
           git config --unset-all http.https://github.com/.extraheader 2>/dev/null || true
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN=" >> "$GITHUB_ENV"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL=" >> "$GITHUB_ENV"
+
+          # Note: ACTIONS_ID_TOKEN_REQUEST_* vars are NOT blanked here — the parent
+          # naiad CLI needs them for OIDC bootstrap. They are stripped from the pi
+          # child process via BLOCKED_ENV_VARS in launcher.ts.
+
+          # Blank GitHub tokens via GITHUB_ENV so they persist to subsequent steps
+          echo "GITHUB_TOKEN=" >> "$GITHUB_ENV"
+          echo "GH_TOKEN=" >> "$GITHUB_ENV"
         id: sanitize
 
       - name: Run agent
@@ -114,7 +186,14 @@ jobs:
         env:
           NAIAD_API_URL: ${{ secrets.NAIAD_API_URL || 'https://v2.naiadai.com' }}
           NAIAD_ATTEMPT: ${{ inputs.attempt || '1' }}
+          NAIAD_PUBLIC_REPO: ${{ github.event.repository.visibility != 'private' && 'true' || '' }}
         run: |
+          # Close GHA side channels (public repo leak prevention)
+          export GITHUB_STEP_SUMMARY=/dev/null
+          export GITHUB_OUTPUT=/dev/null
+          export GITHUB_ENV=/dev/null
+          export GITHUB_PATH=/dev/null
+
           THREAD_ID="${{ inputs.thread_id }}"
           ATTEMPT="${{ inputs.attempt || '1' }}"
           MODEL_ID="${{ inputs.model }}"
@@ -132,8 +211,16 @@ jobs:
               ARGS+=(--model "$MODEL_ID")
             fi
 
-            naiad exec "${ARGS[@]}" --prompt-file /tmp/naiad-prompt.txt 2>/dev/null || \
-            naiad exec "${ARGS[@]}" "Continue from where the previous session left off."
+            if [ "$NAIAD_PUBLIC_REPO" = "true" ]; then
+              # Suppress agent output on public repos — only emit allowlisted status lines
+              # Use PIPESTATUS to preserve agent exit code through the filter pipe
+              set -o pipefail
+              { naiad exec "${ARGS[@]}" --prompt-file /tmp/naiad-prompt.txt 2>/dev/null || \
+                naiad exec "${ARGS[@]}" "Continue from where the previous session left off."; } 2>&1 | { grep -E '^\[naiad\]' || true; }
+            else
+              naiad exec "${ARGS[@]}" --prompt-file /tmp/naiad-prompt.txt 2>/dev/null || \
+              naiad exec "${ARGS[@]}" "Continue from where the previous session left off."
+            fi
           else
             # Fresh run
             ARGS=(
@@ -148,7 +235,13 @@ jobs:
               ARGS+=(--model "$MODEL_ID")
             fi
 
-            naiad exec "${ARGS[@]}"
+            if [ "$NAIAD_PUBLIC_REPO" = "true" ]; then
+              # Suppress agent output on public repos — only emit allowlisted status lines
+              set -o pipefail
+              naiad exec "${ARGS[@]}" 2>&1 | { grep -E '^\[naiad\]' || true; }
+            else
+              naiad exec "${ARGS[@]}"
+            fi
           fi
 
       - name: Restore credentials
@@ -170,104 +263,6 @@ jobs:
             fi
             rm -rf "$CRED_DIR"
           fi
-
-      - name: Push changes
-        id: push
-        if: success()
-        run: |
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "has_changes=true" >> "$GITHUB_OUTPUT"
-
-          THREAD_ID=""
-          if [ -f /tmp/naiad-result.json ]; then
-            THREAD_ID=$(jq -r '.thread_id // empty' /tmp/naiad-result.json)
-          fi
-
-          # Use the current branch (the one we were dispatched on)
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          if [ "$BRANCH" = "HEAD" ]; then
-            # Detached HEAD (shouldn't happen, but fallback)
-            BRANCH="naiad/${THREAD_ID:-$(date +%s)}"
-            git checkout -b "$BRANCH"
-          fi
-
-          git config user.name "naiad-bot"
-          git config user.email "266131081+naiad-bot@users.noreply.github.com"
-
-          git add -A
-          git commit -m "naiad: agent changes${THREAD_ID:+ for thread $THREAD_ID}"
-          git push origin "$BRANCH"
-
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
-
-      - name: Open PR
-        id: pr
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Determine the branch — from this run's push or from git
-          BRANCH="${{ steps.push.outputs.branch }}"
-          if [ -z "$BRANCH" ]; then
-            BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
-          fi
-          if [ -z "$BRANCH" ] || [ "$BRANCH" = "HEAD" ] || [ "$BRANCH" = "${{ github.event.repository.default_branch }}" ]; then
-            echo "No naiad branch to open a PR for"
-            exit 0
-          fi
-
-          # Check if there's anything to PR (either we pushed or the branch has prior commits)
-          HAS_CHANGES="${{ steps.push.outputs.has_changes }}"
-          if [ "$HAS_CHANGES" != "true" ]; then
-            # Check if the remote branch exists and has commits ahead of default
-            AHEAD=$(git rev-list --count "origin/${{ github.event.repository.default_branch }}..origin/${BRANCH}" 2>/dev/null || echo "0")
-            if [ "$AHEAD" = "0" ]; then
-              echo "No changes to open a PR for"
-              exit 0
-            fi
-          fi
-
-          THREAD_URL=""
-          if [ -f /tmp/naiad-result.json ]; then
-            THREAD_URL=$(jq -r '.thread_url // empty' /tmp/naiad-result.json)
-          fi
-
-          TITLE="naiad: agent changes"
-
-          BODY="Changes made by the Naiad agent."
-          if [ -n "$THREAD_URL" ]; then
-            BODY="${BODY}\n\n[View agent thread →](${THREAD_URL})"
-          fi
-
-          EXISTING_PR=$(gh pr view --head "$BRANCH" --json url --jq '.url' 2>/dev/null || true)
-
-          if [ -n "$EXISTING_PR" ]; then
-            PR_URL="$EXISTING_PR"
-          else
-            PR_URL=$(gh pr create \
-              --title "$TITLE" \
-              --body "$(echo -e "$BODY")" \
-              --head "$BRANCH" \
-              --base "${{ github.event.repository.default_branch }}" \
-              2>&1) || true
-            echo "gh pr create output: $PR_URL"
-            # If the output isn't a URL, clear it
-            if [[ "$PR_URL" != https://* ]]; then
-              echo "::warning::gh pr create failed: $PR_URL"
-              PR_URL=""
-            fi
-
-            # Fallback: query the PR if create didn't return a URL
-            if [ -z "$PR_URL" ]; then
-              PR_URL=$(gh pr view "$BRANCH" --json url --jq '.url' 2>/dev/null || true)
-            fi
-          fi
-
-          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
 
       - name: Update thread with result
         if: always()
@@ -313,11 +308,7 @@ jobs:
             RAW_STATUS="FAILED"
           fi
 
-          RESULT=$(jq -n \
-            --arg status "$RAW_STATUS" \
-            --arg pr_url "${{ steps.pr.outputs.pr_url }}" \
-            --arg branch "${{ steps.push.outputs.branch }}" \
-            '{status: $status, pr_url: (if $pr_url != "" then $pr_url else null end), branch: (if $branch != "" then $branch else null end)}')
+          RESULT=$(jq -n --arg status "$RAW_STATUS" '{status: $status}')
 
           curl -s -X PATCH "${NAIAD_API_URL}/api/v1/threads/${THREAD_ID}" \
             -H "Authorization: Bearer ${AUTH_TOKEN}" \
