@@ -107,8 +107,10 @@
     <section class="px-4 mb-12">
       <h2 class="text-xl font-bold mb-6 text-center">UPCOMING &amp; RECENT SHOWS</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-4">
-        <div class="bg-black cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(0)">
-          <img src="assets/posters/poster-2026-11-06_web.jpg" alt="Show November 6, 2026" class="w-full h-full object-contain" />
+        <div class="relative overflow-hidden bg-white cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(0)">
+          <!-- Light square posters: use a blurred copy behind the sharp artwork. -->
+          <span aria-hidden="true" class="absolute pointer-events-none" style="inset: -24px; background: url('assets/posters/poster-2026-11-06_web.jpg') center / cover; filter: blur(20px); opacity: 0.8;"></span>
+          <img src="assets/posters/poster-2026-11-06_web.jpg" alt="Show November 6, 2026" class="relative w-full h-full object-contain" />
         </div>
         <img src="assets/posters/poster-2026-10-16_web.jpg" alt="Show October 16, 2026" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(1)" />
         <img src="assets/posters/poster-2026-09-19_web.jpg" alt="Show September 19, 2026" class="cursor-pointer hover:opacity-80 transition-opacity" style="aspect-ratio: 0.77;" onclick="openPosterLightbox(2)" />
