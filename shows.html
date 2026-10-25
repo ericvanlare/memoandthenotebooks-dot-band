@@ -49,8 +49,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
 
         <div class="flex flex-col">
-          <div class="bg-black cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" onclick="openLightbox(0)">
-            <img src="assets/posters/poster-2026-11-06_web.jpg" alt="Show November 6, 2026" class="w-full h-full object-contain" />
+          <div class="relative overflow-hidden bg-white cursor-pointer hover:opacity-80 transition-opacity shadow-lg mb-2" style="aspect-ratio: 0.77;" onclick="openLightbox(0)">
+            <!-- Light square posters: use a blurred copy behind the sharp artwork. -->
+            <span aria-hidden="true" class="absolute pointer-events-none" style="inset: -24px; background: url('assets/posters/poster-2026-11-06_web.jpg') center / cover; filter: blur(20px); opacity: 0.8;"></span>
+            <img src="assets/posters/poster-2026-11-06_web.jpg" alt="Show November 6, 2026" class="relative w-full h-full object-contain" />
           </div>
           <p class="text-sm font-semibold">November 6, 2026</p>
         </div>
